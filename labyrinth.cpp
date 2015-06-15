@@ -7,13 +7,16 @@ using namespace std;
 float a = 0.0;
 float da = 1;
 float l = 0.5;
-struct Vettori {
+struct Vettori
+{
 	float eye[3];
 	float direction[3];
 	float up[3];
 } vettori;
-const int map[29][37] = { { 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0,
-		0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0 }, //0
+const int map[29][37] =
+{
+{ 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
+		0, 1, 0, 1, 0, 1, 1, 0, 0, 0 }, //0
 		{ 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1,
 				1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0 }, //1
 		{ 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0,
@@ -71,7 +74,16 @@ const int map[29][37] = { { 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0,
 		{ 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0,
 				1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0 } //28
 };
-void initializateVision() {
+void aerialWiew()
+{
+	vettori.eye[2] = 90;
+}
+void standardWiew()
+{
+	vettori.eye[2] = 1.5;
+}
+void initializateVision()
+{
 	vettori.eye[0] = 0;
 	vettori.eye[1] = 0;
 	vettori.eye[2] = 1.5;
@@ -82,47 +94,60 @@ void initializateVision() {
 	vettori.up[1] = 0;
 	vettori.up[2] = 3;
 }
-bool goForward() {
+void reset()
+{
+	initializateVision();
+}
+bool goForward()
+{
 	if ((vettori.eye[0] + l * cos((a * 3.14) / 180) < 115.92)
 			&& (vettori.eye[1] + l * sin((a * 3.14) / 180) < 145.92)
 			&& (vettori.eye[0] + l * cos((a * 3.14) / 180) > 0.06)
-			&& (vettori.eye[1] + l * sin((a * 3.14) / 180) > 0.06)) {
+			&& (vettori.eye[1] + l * sin((a * 3.14) / 180) > 0.06))
+	{
 		return true;
 	}
 	cout << "stop" << endl;
 	return false;
 }
-bool goBackward() {
+bool goBackward()
+{
 	if ((vettori.eye[0] - l * cos((a * 3.14) / 180) > 0.06)
 			&& (vettori.eye[1] - l * sin((a * 3.14) / 180) > 0.06)
 			&& (vettori.eye[0] - l * cos((a * 3.14) / 180) < 115.92)
-			&& (vettori.eye[1] - l * sin((a * 3.14) / 180) < 145.92)) {
+			&& (vettori.eye[1] - l * sin((a * 3.14) / 180) < 145.92))
+	{
 		return true;
 	}
 	cout << "stop" << endl;
 	return false;
 }
-void init() {
+void init()
+{
 	glClearColor(1.0, 1.0, 1.0, 0.0);
 	glShadeModel(GL_SMOOTH);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glEnable(GL_DEPTH_TEST);
 }
-void keyboard(int key, int x, int y) {
-	if (key == GLUT_KEY_LEFT) {
+void keyboard(int key, int x, int y)
+{
+	if (key == GLUT_KEY_LEFT)
+	{
 		cout << "left" << endl;
 		a = a + da;
 		vettori.direction[0] = vettori.eye[0] + cos((a * 3.14) / 180);
 		vettori.direction[1] = vettori.eye[1] + sin((a * 3.14) / 180);
 	}
-	if (key == GLUT_KEY_RIGHT) {
+	if (key == GLUT_KEY_RIGHT)
+	{
 		cout << "right" << endl;
 		a = a - da;
 		vettori.direction[0] = vettori.eye[0] + cos((a * 3.14) / 180);
 		vettori.direction[1] = vettori.eye[1] + sin((a * 3.14) / 180);
 	}
-	if (key == GLUT_KEY_UP && goForward()) {
+	if (key == GLUT_KEY_UP && goForward())
+	{
 		vettori.eye[0] = vettori.eye[0] + l * cos((a * 3.14) / 180);
 		vettori.eye[1] = vettori.eye[1] + l * sin((a * 3.14) / 180);
 		vettori.direction[0] = vettori.eye[0] + cos((a * 3.14) / 180);
@@ -130,7 +155,8 @@ void keyboard(int key, int x, int y) {
 		cout << "forward-" << "current position" << vettori.eye[0] << ","
 				<< endl;
 	}
-	if (key == GLUT_KEY_DOWN && goBackward()) {
+	if (key == GLUT_KEY_DOWN && goBackward())
+	{
 		vettori.eye[0] = vettori.eye[0] - l * cos((a * 3.14) / 180);
 		vettori.eye[1] = vettori.eye[1] - l * sin((a * 3.14) / 180);
 		vettori.direction[0] = vettori.eye[0] + cos((a * 3.14) / 180);
@@ -140,28 +166,49 @@ void keyboard(int key, int x, int y) {
 	}
 	glutPostRedisplay();
 }
-void keyPressed(unsigned char key, int x, int y) {
-	if (key == 'i') {
+void keyPressed(unsigned char key, int x, int y)
+{
+	if (key == 'f')
+	{
 		glutFullScreen();
+		glutPostRedisplay();
+	}
+	if (key == 'a')
+	{
+		aerialWiew();
+		glutPostRedisplay();
+	}
+	if (key == 's')
+	{
+		standardWiew();
+		glutPostRedisplay();
+	}
+	if (key == 'r')
+	{
+		reset();
 		glutPostRedisplay();
 	}
 	if (key == 27)
 		exit(0);
 }
-void reshape(int w, int h) {
+void reshape(int w, int h)
+{
 	glViewport(0, 0, w, h);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluPerspective(45.0, (double) w / (double) h, 1.0, 100);
 }
-void drawFloor() {
+void drawFloor()
+{
 	int k = 0;
 	int puntoY = 0;
 	int puntox;
-	while (k < 72) {
+	while (k < 72)
+	{
 		puntox = 0;
 		int i = 0;
-		while (i < 29) {
+		while (i < 29)
+		{
 			glBegin(GL_QUADS);
 			if (k % 2 == 0)
 				glColor3f(1.0, 1.0, 1.0);
@@ -189,7 +236,8 @@ void drawFloor() {
 		k++;
 	}
 }
-void drawInteriorWall(int i, int j) {
+void drawInteriorWall(int i, int j)
+{
 	int c = 4;
 	i = i * c;
 	j = j * c;
@@ -218,7 +266,8 @@ void drawInteriorWall(int i, int j) {
 	glVertex3f(jc, i, h);
 	glEnd();
 }
-void drawOuterWall() {
+void drawOuterWall()
+{
 	glColor3f(0.0, 0.0, 0.36);
 	glBegin(GL_QUADS);
 	glVertex3f(0, 0, 0);
@@ -245,7 +294,8 @@ void drawOuterWall() {
 	glVertex3f(116, 144, hOuter);
 	glEnd();
 }
-void display(void) {
+void display(void)
+{
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
@@ -262,7 +312,8 @@ void display(void) {
 	glPopMatrix();
 	glutSwapBuffers();
 }
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 	initializateVision();
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
