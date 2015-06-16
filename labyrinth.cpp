@@ -3,6 +3,9 @@
 #include <iostream>
 const int h = 2;
 const int hOuter = 15;
+const int c=4;//determina la grandezza
+const int length=c*36;
+const int width=c*29;
 using namespace std;
 float a = 0.0;
 float da = 1;
@@ -104,9 +107,7 @@ bool goForward()
 			&& (vettori.eye[1] + l * sin((a * 3.14) / 180) < 145.92)
 			&& (vettori.eye[0] + l * cos((a * 3.14) / 180) > 0.06)
 			&& (vettori.eye[1] + l * sin((a * 3.14) / 180) > 0.06))
-	{
 		return true;
-	}
 	cout << "stop" << endl;
 	return false;
 }
@@ -116,9 +117,7 @@ bool goBackward()
 			&& (vettori.eye[1] - l * sin((a * 3.14) / 180) > 0.06)
 			&& (vettori.eye[0] - l * cos((a * 3.14) / 180) < 115.92)
 			&& (vettori.eye[1] - l * sin((a * 3.14) / 180) < 145.92))
-	{
 		return true;
-	}
 	cout << "stop" << endl;
 	return false;
 }
@@ -202,15 +201,14 @@ void drawFloor()
 {
 	glColor3f(0, 0, 0);
 	glBegin(GL_QUADS);
-	glVertex3f(116, 0, 0);
-	glVertex3f(116, 146, 0);
-	glVertex3f(0, 146, 0);
+	glVertex3f(width, 0, 0);
+	glVertex3f(width, length, 0);
+	glVertex3f(0, length, 0);
 	glVertex3f(0, 0, 0);
 	glEnd();
 }
 void drawInteriorWall(int i, int j)
 {
-	int c = 4;
 	i = i * c;
 	j = j * c;
 	int ic = i + c;
@@ -243,27 +241,27 @@ void drawOuterWall()
 	glColor3f(0.0, 0.0, 0.36);
 	glBegin(GL_QUADS);
 	glVertex3f(0, 0, 0);
-	glVertex3f(0, 144, 0);
-	glVertex3f(0, 144, hOuter);
+	glVertex3f(0, length, 0);
+	glVertex3f(0, length, hOuter);
 	glVertex3f(0, 0, hOuter);
 	glEnd();
 	glBegin(GL_QUADS);
-	glVertex3f(116, 144, 0);
-	glVertex3f(116, 0, 0);
-	glVertex3f(116, 0, hOuter);
-	glVertex3f(116, 144, hOuter);
+	glVertex3f(width, length, 0);
+	glVertex3f(width, 0, 0);
+	glVertex3f(width, 0, hOuter);
+	glVertex3f(width, length, hOuter);
 	glEnd();
 	glBegin(GL_QUADS);
-	glVertex3f(116, 0, 0);
+	glVertex3f(width, 0, 0);
 	glVertex3f(0, 0, 0);
 	glVertex3f(0, 0, hOuter);
-	glVertex3f(116, 0, hOuter);
+	glVertex3f(width, 0, hOuter);
 	glEnd();
 	glBegin(GL_QUADS);
-	glVertex3f(116, 144, 0);
-	glVertex3f(0, 144, 0);
-	glVertex3f(0, 144, hOuter);
-	glVertex3f(116, 144, hOuter);
+	glVertex3f(width, length, 0);
+	glVertex3f(0, length, 0);
+	glVertex3f(0, length, hOuter);
+	glVertex3f(width, length, hOuter);
 	glEnd();
 }
 void display(void)
