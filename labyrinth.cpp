@@ -2,7 +2,7 @@
 #include <math.h>
 #include <iostream>
 const int h = 2;
-const int hOuter = 20;
+const int hOuter = 15;
 using namespace std;
 float a = 0.0;
 float da = 1;
@@ -153,7 +153,7 @@ void keyboard(int key, int x, int y)
 		vettori.direction[0] = vettori.eye[0] + cos((a * 3.14) / 180);
 		vettori.direction[1] = vettori.eye[1] + sin((a * 3.14) / 180);
 		cout << "forward-" << "current position" << vettori.eye[0] << ","
-				<< endl;
+				<< vettori.eye[1] << endl;
 	}
 	if (key == GLUT_KEY_DOWN && goBackward())
 	{
@@ -162,7 +162,7 @@ void keyboard(int key, int x, int y)
 		vettori.direction[0] = vettori.eye[0] + cos((a * 3.14) / 180);
 		vettori.direction[1] = vettori.eye[1] + sin((a * 3.14) / 180);
 		cout << "backward-" << "current position" << vettori.eye[0] << ","
-				<< endl;
+				<< vettori.eye[1] << endl;
 	}
 	glutPostRedisplay();
 }
@@ -200,41 +200,13 @@ void reshape(int w, int h)
 }
 void drawFloor()
 {
-	int k = 0;
-	int puntoY = 0;
-	int puntox;
-	while (k < 72)
-	{
-		puntox = 0;
-		int i = 0;
-		while (i < 29)
-		{
-			glBegin(GL_QUADS);
-			if (k % 2 == 0)
-				glColor3f(1.0, 1.0, 1.0);
-			else
-				glColor3f(1.0, 0.0, 0.0);
-			glVertex3f(puntox, puntoY, 0);
-			glVertex3f(puntox + 2, puntoY, 0);
-			glVertex3f(puntox + 2, puntoY + 2, 0);
-			glVertex3f(puntox, puntoY + 2, 0);
-			glEnd();
-			glBegin(GL_QUADS);
-			if (k % 2 != 0)
-				glColor3f(1.0, 1.0, 1.0);
-			else
-				glColor3f(1.0, 0.0, 0.0);
-			glVertex3f(puntox + 2, puntoY, 0);
-			glVertex3f(puntox + 4, puntoY, 0);
-			glVertex3f(puntox + 4, puntoY + 2, 0);
-			glVertex3f(puntox + 2, puntoY + 2, 0);
-			glEnd();
-			i++;
-			puntox += 4;
-		}
-		puntoY += 2;
-		k++;
-	}
+	glColor3f(0, 0, 0);
+	glBegin(GL_QUADS);
+	glVertex3f(116, 0, 0);
+	glVertex3f(116, 146, 0);
+	glVertex3f(0, 146, 0);
+	glVertex3f(0, 0, 0);
+	glEnd();
 }
 void drawInteriorWall(int i, int j)
 {
