@@ -8,12 +8,12 @@
 #include <ctime>
 #include "iostream"
 using namespace std;
-const int h = 2;
-const int hOuter = 15;
-const int c = 5; //determina la grandezza
+const int h = 3;
+const int hOuter = 12;
+const int confine = 2;
+const int c = 6; //determina la grandezza del labirinto
 const int length = c * 36;
 const int width = c * 29;
-using namespace std;
 float a = 0.0;
 float da = 1;
 float l = 0.5;
@@ -38,6 +38,7 @@ void loadMap()
 {
 	srand(time(0));
 	int random = rand() % 4;
+	cout << random << endl;
 	if (random == 0)
 	{
 		ifstream in("LabirinthMap1.txt");
@@ -66,13 +67,13 @@ void aerialWiew()
 }
 void standardWiew()
 {
-	vettori.eye[2] = 1.5;
+	vettori.eye[2] = 1;
 }
 void initializateVision()
 {
-	vettori.eye[0] = 0;
-	vettori.eye[1] = 0;
-	vettori.eye[2] = 1.5;
+	vettori.eye[0] = 3;
+	vettori.eye[1] = 3;
+	vettori.eye[2] = 1;
 	vettori.direction[0] = 1;
 	vettori.direction[1] = 0;
 	vettori.direction[2] = 1;
@@ -84,24 +85,42 @@ void reset()
 {
 	initializateVision();
 }
-bool goForward()
+bool goForwardIn()
 {
-	if ((vettori.eye[0] + l * cos((a * 3.14) / 180) < 115.92)
-			&& (vettori.eye[1] + l * sin((a * 3.14) / 180) < 145.92)
-			&& (vettori.eye[0] + l * cos((a * 3.14) / 180) > 0.06)
-			&& (vettori.eye[1] + l * sin((a * 3.14) / 180) > 0.06))
+	if (map[(int) ((vettori.eye[0] / c) + l * cos((a * 3.14) / 180))][(int) ((vettori.eye[1]
+			/ c) + l * sin((a * 3.14) / 180))] == 1)
+	{
+		cout << "conflict with wall" << endl;
+		return false;
+	}
+	return true;
+}
+bool goBackwardIn()
+{
+	if (map[(int) ((vettori.eye[0] / c) - l * cos((a * 3.14) / 180))][(int) ((vettori.eye[1]
+			/ c) - l * sin((a * 3.14) / 180))] == 1)
+	{
+		cout << "conflict with wall" << endl;
+		return false;
+	}
+	return true;
+}
+bool goForwardOut()
+{
+	if ((vettori.eye[0] + l * cos((a * 3.14) / 180) < width - confine)
+			&& (vettori.eye[1] + l * sin((a * 3.14) / 180) < length - confine)
+			&& (vettori.eye[0] + l * cos((a * 3.14) / 180) > confine)
+			&& (vettori.eye[1] + l * sin((a * 3.14) / 180) > confine))
 		return true;
-	cout << "stop" << endl;
 	return false;
 }
-bool goBackward()
+bool goBackwardOut()
 {
-	if ((vettori.eye[0] - l * cos((a * 3.14) / 180) > 0.06)
-			&& (vettori.eye[1] - l * sin((a * 3.14) / 180) > 0.06)
-			&& (vettori.eye[0] - l * cos((a * 3.14) / 180) < 115.92)
-			&& (vettori.eye[1] - l * sin((a * 3.14) / 180) < 145.92))
+	if ((vettori.eye[0] - l * cos((a * 3.14) / 180) > confine)
+			&& (vettori.eye[1] - l * sin((a * 3.14) / 180) > confine)
+			&& (vettori.eye[0] - l * cos((a * 3.14) / 180) < width - confine)
+			&& (vettori.eye[1] - l * sin((a * 3.14) / 180) < length - confine))
 		return true;
-	cout << "stop" << endl;
 	return false;
 }
 void init()
@@ -128,7 +147,7 @@ void keyboard(int key, int x, int y)
 		vettori.direction[0] = vettori.eye[0] + cos((a * 3.14) / 180);
 		vettori.direction[1] = vettori.eye[1] + sin((a * 3.14) / 180);
 	}
-	if (key == GLUT_KEY_UP && goForward())
+	if (key == GLUT_KEY_UP && goForwardOut() && goForwardIn())
 	{
 		vettori.eye[0] = vettori.eye[0] + l * cos((a * 3.14) / 180);
 		vettori.eye[1] = vettori.eye[1] + l * sin((a * 3.14) / 180);
@@ -137,7 +156,7 @@ void keyboard(int key, int x, int y)
 		cout << "forward-" << "current position" << (int) vettori.eye[0] << ","
 				<< (int) vettori.eye[1] << endl;
 	}
-	if (key == GLUT_KEY_DOWN && goBackward())
+	if (key == GLUT_KEY_DOWN && goBackwardOut() && goBackwardIn())
 	{
 		vettori.eye[0] = vettori.eye[0] - l * cos((a * 3.14) / 180);
 		vettori.eye[1] = vettori.eye[1] - l * sin((a * 3.14) / 180);
@@ -150,22 +169,22 @@ void keyboard(int key, int x, int y)
 }
 void keyPressed(unsigned char key, int x, int y)
 {
-	if (key == 'f')
+	if (key == 'f' || key == 'F')
 	{
 		glutFullScreen();
 		glutPostRedisplay();
 	}
-	if (key == 'a')
+	if (key == 'a' || key == 'A')
 	{
 		aerialWiew();
 		glutPostRedisplay();
 	}
-	if (key == 's')
+	if (key == 's' || key == 'S')
 	{
 		standardWiew();
 		glutPostRedisplay();
 	}
-	if (key == 'r')
+	if (key == 'r' || key == 'R')
 	{
 		reset();
 		glutPostRedisplay();
@@ -182,7 +201,7 @@ void reshape(int w, int h)
 }
 void drawFloor()
 {
-	glColor3f(0, 0, 0);
+	glColor3f(0, 0, 0.3);
 	glBegin(GL_QUADS);
 	glVertex3f(width, 0, 0);
 	glVertex3f(width, length, 0);
