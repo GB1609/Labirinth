@@ -8,15 +8,16 @@
 #include <ctime>
 #include "iostream"
 using namespace std;
-int h = 7;
-int c = 8; //determina la grandezza del labirinto
+int h = 5;
+int c = 6; //determina la grandezza del labirinto
 const int confine = 2;
 int length = c * 36;
 int width = c * 29;
 float a = 0.0;
 float da = 1;
-float l = 0.5;
+float l = 0.6;
 bool aerial = false;
+float rotate = 0;
 int map[29][36];
 struct Vettori
 {
@@ -38,12 +39,12 @@ void loadMap()
 {
 	srand(time(0));
 	int random = rand() % 4;
-	cout << random << endl;
+	cout <<"Stai giocando con il labirinto numero "<< random+1 <<" Buona Fortuna"<< endl;
 	if (random == 0)
 	{
-		ifstream in("LabirinthMap1.txt");
-		assignValue(in);
-		in.close();
+	ifstream in("LabirinthMap1.txt");
+	assignValue(in);
+	in.close();
 	} else if (random == 1)
 	{
 		ifstream in("LabirinthMap2.txt");
@@ -66,6 +67,8 @@ void aerialWiew()
 	h = 2;
 	c = 4;
 	aerial = true;
+	length = c * 36;
+	width = c * 29;
 	vettori.eye[2] = 90;
 	glutPostRedisplay();
 }
@@ -73,6 +76,8 @@ void standardWiew()
 {
 	h = 7;
 	c = 8;
+	length = c * 36;
+	width = c * 29;
 	aerial = false;
 	vettori.eye[2] = 1;
 	glutPostRedisplay();
@@ -81,8 +86,8 @@ void initializateVision()
 {
 	vettori.eye[0] = 3;
 	vettori.eye[1] = 3;
-	vettori.eye[2] = 1;
-	vettori.direction[0] = 17;
+	vettori.eye[2] = 0.95;
+	vettori.direction[0] = 1;
 	vettori.direction[1] = 0;
 	vettori.direction[2] = 1;
 	vettori.up[0] = 0;
@@ -98,18 +103,20 @@ void reset()
 }
 bool goForwardIn()
 {
-	if (map[(int) ((vettori.eye[0] / c) + l * cos((a * 3.14) / 180))][(int) ((vettori.eye[1]
-			/ c) + l * sin((a * 3.14) / 180))] == 1)
-	{
-		cout << "conflict with wall" << endl;
-		return false;
-	}
+//	int x = (int) ((vettori.eye[0] / c) + l * cos((a * 3.14) / 180));
+//	int y = (int) ((vettori.eye[1] / c) + l * sin((a * 3.14) / 180));
+//	if (map[x][y] == 1)
+//	{
+//		cout << "conflict with wall" << endl;
+//		return false;
+//	}
 	return true;
 }
 bool goBackwardIn()
 {
-	if (map[(int) ((vettori.eye[0] / c) - l * cos((a * 3.14) / 180))][(int) ((vettori.eye[1]
-			/ c) - l * sin((a * 3.14) / 180))] == 1)
+	int x = (int) ((vettori.eye[0] / c) - l * cos((a * 3.14) / 180));
+	int y = (int) ((vettori.eye[1] / c) - l * sin((a * 3.14) / 180));
+	if (map[x][y] == 1)
 	{
 		cout << "conflict with wall" << endl;
 		return false;
@@ -123,7 +130,8 @@ bool goForwardOut()
 			&& (vettori.eye[0] + l * cos((a * 3.14) / 180) > confine)
 			&& (vettori.eye[1] + l * sin((a * 3.14) / 180) > confine))
 		return true;
-	return false;
+	else
+		return false;
 }
 bool goBackwardOut()
 {
@@ -132,7 +140,8 @@ bool goBackwardOut()
 			&& (vettori.eye[0] - l * cos((a * 3.14) / 180) < width - confine)
 			&& (vettori.eye[1] - l * sin((a * 3.14) / 180) < length - confine))
 		return true;
-	return false;
+	else
+		return false;
 }
 void init()
 {
@@ -158,7 +167,7 @@ void keyboard(int key, int x, int y)
 		vettori.direction[0] = vettori.eye[0] + cos((a * 3.14) / 180);
 		vettori.direction[1] = vettori.eye[1] + sin((a * 3.14) / 180);
 	}
-	if (key == GLUT_KEY_UP && goForwardOut() && goForwardIn())
+	if (key == GLUT_KEY_UP && goForwardIn() && goForwardOut())
 	{
 		vettori.eye[0] = vettori.eye[0] + l * cos((a * 3.14) / 180);
 		vettori.eye[1] = vettori.eye[1] + l * sin((a * 3.14) / 180);
@@ -167,7 +176,7 @@ void keyboard(int key, int x, int y)
 		cout << "forward-" << "current position" << vettori.eye[0] << ","
 				<< vettori.eye[1] << endl;
 	}
-	if (key == GLUT_KEY_DOWN && goBackwardOut() && goBackwardIn())
+	if (key == GLUT_KEY_DOWN && goBackwardIn() && goBackwardOut())
 	{
 		vettori.eye[0] = vettori.eye[0] - l * cos((a * 3.14) / 180);
 		vettori.eye[1] = vettori.eye[1] - l * sin((a * 3.14) / 180);
@@ -287,6 +296,16 @@ void drawOuterWall()
 	glVertex3f(width, length, h);
 	glEnd();
 }
+void positionRotatingCube(int i, int j)
+{
+	glPushMatrix();
+	glColor3f(1, 0, 0);
+	glTranslatef((i * c) + 1.5, (j * c) + 1.5, 1.5);
+	glRotatef(rotate, 0, 0, 5);
+	glutSolidCube(1.3);
+	glPopMatrix();
+	glColor3f(0, 1, 0);
+}
 void display(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -304,8 +323,20 @@ void display(void)
 		for (int j = 0; j < 36; j++)
 			if (map[i][j] == 1)
 				drawInteriorWall(j, i);
+			else if (map[i][j] == 2)
+				positionRotatingCube(i, j);
 	glPopMatrix();
 	glutSwapBuffers();
+}
+void rotateCube(int value)
+{
+	rotate += 1.0f;
+	if (rotate > 360)
+	{
+		rotate -= 360;
+	}
+	glutPostRedisplay();
+	glutTimerFunc(25, rotateCube, 0);
 }
 int main(int argc, char **argv)
 {
@@ -321,6 +352,6 @@ int main(int argc, char **argv)
 	glutSpecialFunc(keyboard);
 	glutDisplayFunc(display);
 	glutPostRedisplay();
+	glutTimerFunc(25, rotateCube, 0);
 	glutMainLoop();
-	return 0;
 }
