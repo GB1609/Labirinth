@@ -8,15 +8,15 @@
 #include <ctime>
 #include "iostream"
 using namespace std;
-const int h = 3;
-const int hOuter = 12;
+int h = 7;
+int c = 8; //determina la grandezza del labirinto
 const int confine = 2;
-const int c = 6; //determina la grandezza del labirinto
-const int length = c * 36;
-const int width = c * 29;
+int length = c * 36;
+int width = c * 29;
 float a = 0.0;
 float da = 1;
 float l = 0.5;
+bool aerial = false;
 int map[29][36];
 struct Vettori
 {
@@ -63,18 +63,26 @@ void loadMap()
 }
 void aerialWiew()
 {
+	h = 2;
+	c = 4;
+	aerial = true;
 	vettori.eye[2] = 90;
+	glutPostRedisplay();
 }
 void standardWiew()
 {
+	h = 7;
+	c = 8;
+	aerial = false;
 	vettori.eye[2] = 1;
+	glutPostRedisplay();
 }
 void initializateVision()
 {
 	vettori.eye[0] = 3;
 	vettori.eye[1] = 3;
 	vettori.eye[2] = 1;
-	vettori.direction[0] = 1;
+	vettori.direction[0] = 17;
 	vettori.direction[1] = 0;
 	vettori.direction[2] = 1;
 	vettori.up[0] = 0;
@@ -83,6 +91,9 @@ void initializateVision()
 }
 void reset()
 {
+	h = 7;
+	c = 8;
+	aerial = true;
 	initializateVision();
 }
 bool goForwardIn()
@@ -125,7 +136,7 @@ bool goBackwardOut()
 }
 void init()
 {
-	glClearColor(1.0, 1.0, 1.0, 0.0);
+	glClearColor(1, 1, 1, 0.0);
 	glShadeModel(GL_SMOOTH);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -153,8 +164,8 @@ void keyboard(int key, int x, int y)
 		vettori.eye[1] = vettori.eye[1] + l * sin((a * 3.14) / 180);
 		vettori.direction[0] = vettori.eye[0] + cos((a * 3.14) / 180);
 		vettori.direction[1] = vettori.eye[1] + sin((a * 3.14) / 180);
-		cout << "forward-" << "current position" << (int) vettori.eye[0] << ","
-				<< (int) vettori.eye[1] << endl;
+		cout << "forward-" << "current position" << vettori.eye[0] << ","
+				<< vettori.eye[1] << endl;
 	}
 	if (key == GLUT_KEY_DOWN && goBackwardOut() && goBackwardIn())
 	{
@@ -201,12 +212,22 @@ void reshape(int w, int h)
 }
 void drawFloor()
 {
-	glColor3f(0, 0, 0.3);
+	glColor3f(0, 0, 0);
 	glBegin(GL_QUADS);
 	glVertex3f(width, 0, 0);
 	glVertex3f(width, length, 0);
 	glVertex3f(0, length, 0);
 	glVertex3f(0, 0, 0);
+	glEnd();
+}
+void drawCeiling()
+{
+	glColor3f(1, 1, 1);
+	glBegin(GL_QUADS);
+	glVertex3f(width, 0, h);
+	glVertex3f(width, length, h);
+	glVertex3f(0, length, h);
+	glVertex3f(0, 0, h);
 	glEnd();
 }
 void drawInteriorWall(int i, int j)
@@ -244,26 +265,26 @@ void drawOuterWall()
 	glBegin(GL_QUADS);
 	glVertex3f(0, 0, 0);
 	glVertex3f(0, length, 0);
-	glVertex3f(0, length, hOuter);
-	glVertex3f(0, 0, hOuter);
+	glVertex3f(0, length, h);
+	glVertex3f(0, 0, h);
 	glEnd();
 	glBegin(GL_QUADS);
 	glVertex3f(width, length, 0);
 	glVertex3f(width, 0, 0);
-	glVertex3f(width, 0, hOuter);
-	glVertex3f(width, length, hOuter);
+	glVertex3f(width, 0, h);
+	glVertex3f(width, length, h);
 	glEnd();
 	glBegin(GL_QUADS);
 	glVertex3f(width, 0, 0);
 	glVertex3f(0, 0, 0);
-	glVertex3f(0, 0, hOuter);
-	glVertex3f(width, 0, hOuter);
+	glVertex3f(0, 0, h);
+	glVertex3f(width, 0, h);
 	glEnd();
 	glBegin(GL_QUADS);
 	glVertex3f(width, length, 0);
 	glVertex3f(0, length, 0);
-	glVertex3f(0, length, hOuter);
-	glVertex3f(width, length, hOuter);
+	glVertex3f(0, length, h);
+	glVertex3f(width, length, h);
 	glEnd();
 }
 void display(void)
@@ -275,6 +296,8 @@ void display(void)
 			vettori.direction[0], vettori.direction[1], vettori.direction[2],
 			vettori.up[0], vettori.up[1], vettori.up[2]);
 	drawFloor();
+	if (!aerial)
+		drawCeiling();
 	drawOuterWall();
 	glColor3f(0, 1, 0);
 	for (int i = 0; i < 29; i++)
