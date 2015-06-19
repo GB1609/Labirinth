@@ -35,16 +35,30 @@ void assignValue(ifstream& in)
 		}
 	}
 }
+int generateX()
+{
+	srand(time(0));
+	int random = rand() % 29;
+	return random;
+}
+int generateY()
+{
+	srand(time(0));
+	int random = rand() % 36;
+	return random;
+}
+;
 void loadMap()
 {
 	srand(time(0));
 	int random = rand() % 4;
-	cout <<"Stai giocando con il labirinto numero "<< random+1 <<" Buona Fortuna"<< endl;
+	cout << "Stai giocando con il labirinto numero " << random + 1
+			<< " Buona Fortuna" << endl;
 	if (random == 0)
 	{
-	ifstream in("LabirinthMap1.txt");
-	assignValue(in);
-	in.close();
+		ifstream in("LabirinthMap1.txt");
+		assignValue(in);
+		in.close();
 	} else if (random == 1)
 	{
 		ifstream in("LabirinthMap2.txt");
@@ -84,15 +98,21 @@ void standardWiew()
 }
 void initializateVision()
 {
-	vettori.eye[0] = 3;
-	vettori.eye[1] = 3;
-	vettori.eye[2] = 0.95;
-	vettori.direction[0] = 1;
-	vettori.direction[1] = 0;
-	vettori.direction[2] = 1;
-	vettori.up[0] = 0;
-	vettori.up[1] = 0;
-	vettori.up[2] = 3;
+	int x = generateX();
+	int y = generateY();
+	if (map[x][y] == 0)
+	{
+		vettori.eye[0] = x * c;
+		vettori.eye[1] = y * c;
+		vettori.eye[2] = 0.95;
+		vettori.direction[0] = 1;
+		vettori.direction[1] = 0;
+		vettori.direction[2] = 1;
+		vettori.up[0] = 0;
+		vettori.up[1] = 0;
+		vettori.up[2] = 3;
+	} else
+		initializateVision();
 }
 void reset()
 {
@@ -103,13 +123,13 @@ void reset()
 }
 bool goForwardIn()
 {
-//	int x = (int) ((vettori.eye[0] / c) + l * cos((a * 3.14) / 180));
-//	int y = (int) ((vettori.eye[1] / c) + l * sin((a * 3.14) / 180));
-//	if (map[x][y] == 1)
-//	{
-//		cout << "conflict with wall" << endl;
-//		return false;
-//	}
+	int x = (int) ((vettori.eye[0] / c) + l * cos((a * 3.14) / 180));
+	int y = (int) ((vettori.eye[1] / c) + l * sin((a * 3.14) / 180));
+	if (map[x][y] == 1)
+	{
+		cout << "conflict with wall" << endl;
+		return false;
+	}
 	return true;
 }
 bool goBackwardIn()
@@ -159,15 +179,13 @@ void keyboard(int key, int x, int y)
 		a = a + da;
 		vettori.direction[0] = vettori.eye[0] + cos((a * 3.14) / 180);
 		vettori.direction[1] = vettori.eye[1] + sin((a * 3.14) / 180);
-	}
-	if (key == GLUT_KEY_RIGHT)
+	} else if (key == GLUT_KEY_RIGHT)
 	{
 		cout << "right" << endl;
 		a = a - da;
 		vettori.direction[0] = vettori.eye[0] + cos((a * 3.14) / 180);
 		vettori.direction[1] = vettori.eye[1] + sin((a * 3.14) / 180);
-	}
-	if (key == GLUT_KEY_UP && goForwardIn() && goForwardOut())
+	} else if (key == GLUT_KEY_UP && goForwardIn() && goForwardOut())
 	{
 		vettori.eye[0] = vettori.eye[0] + l * cos((a * 3.14) / 180);
 		vettori.eye[1] = vettori.eye[1] + l * sin((a * 3.14) / 180);
@@ -175,8 +193,7 @@ void keyboard(int key, int x, int y)
 		vettori.direction[1] = vettori.eye[1] + sin((a * 3.14) / 180);
 		cout << "forward-" << "current position" << vettori.eye[0] << ","
 				<< vettori.eye[1] << endl;
-	}
-	if (key == GLUT_KEY_DOWN && goBackwardIn() && goBackwardOut())
+	} else if (key == GLUT_KEY_DOWN && goBackwardIn() && goBackwardOut())
 	{
 		vettori.eye[0] = vettori.eye[0] - l * cos((a * 3.14) / 180);
 		vettori.eye[1] = vettori.eye[1] - l * sin((a * 3.14) / 180);
@@ -193,23 +210,19 @@ void keyPressed(unsigned char key, int x, int y)
 	{
 		glutFullScreen();
 		glutPostRedisplay();
-	}
-	if (key == 'a' || key == 'A')
+	} else if (key == 'a' || key == 'A')
 	{
 		aerialWiew();
 		glutPostRedisplay();
-	}
-	if (key == 's' || key == 'S')
+	} else if (key == 's' || key == 'S')
 	{
 		standardWiew();
 		glutPostRedisplay();
-	}
-	if (key == 'r' || key == 'R')
+	} else if (key == 'r' || key == 'R')
 	{
 		reset();
 		glutPostRedisplay();
-	}
-	if (key == 27)
+	} else if (key == 27)
 		exit(0);
 }
 void reshape(int w, int h)
