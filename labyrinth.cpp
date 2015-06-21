@@ -122,9 +122,16 @@ standardWiew()
 	d=1.3;
 }
 void
-verify(int&x,int&y)
+verify(int& x,int& y,int& posX,int& posY)
 {
-
+	if (map[x+1][y]==0)
+		posX+=5;
+	else if (map[x][y+1]==0)
+		posY+=5;
+	else if (map[x-1][y]==0)
+		posX-=5;
+	else if (map[x][y-1]==0)
+		posY-=5;
 }
 void
 initializateVision()
@@ -136,19 +143,18 @@ initializateVision()
 		x=generateX ();
 		y=generateY ();
 	}
-	x*=c;
-	y*=c;
-	verify (x,y);
-	vettori.eye[0]=x;
-	vettori.eye[1]=y;
+	int posX=x*c;
+	int posY=y*c;
+	verify (x,y,posX,posY);
+	vettori.eye[0]=posX;
+	vettori.eye[1]=posY;
 	vettori.eye[2]=1.3;
 	vettori.direction[0]=1;
-	vettori.direction[1]=1;
+	vettori.direction[1]=0;
 	vettori.direction[2]=1;
 	vettori.up[0]=0;
 	vettori.up[1]=0;
 	vettori.up[2]=3;
-
 }
 void
 reset()
@@ -295,11 +301,11 @@ drawCeiling()
 	glPopMatrix ();
 }
 void
-positionRotatingCube(int i,int j)
+positionRotatingCube(int& i,int& j)
 {
 	glPushMatrix ();
 	glColor3f (1,0,0);
-	glTranslatef (i*c,j*c,1.6);
+	glTranslatef (i*c,j*c,1.3);
 	glRotatef (rotate,0,0,1.6);
 	glutSolidCube (d);
 	glPopMatrix ();
