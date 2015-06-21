@@ -8,24 +8,23 @@
 #include <ctime>
 #include "iostream"
 using namespace std;
-int c=6;  //determina la grandezza del labirinto
-const int h=c/2;  //meta diametro del cubo
-const int confine=2.5;
-int saveX,saveY;
-int length=(c*38)+h;  //lunghezza matrice
-int width=(c*31)+h;  //larghezza matrice
+float c=8;  //determina la grandezza del labirinto
+const float h=c/2;  //meta diametro del cubo
+float saveX,saveY;
+float length=c*38;  //lunghezza matrice
+float width=c*31;  //larghezza matrice
 float a=0.0;  //angolo
 float da=1;
-float l=0.6;
+float l=0.7;
 float d=1.3;  //dimensione cubo rotante
 bool aerial=false;  //segnala se la visuale e dall'alto
 float rotate=0;
 float spec[]={0.5,0.5,0.5,1.0};
 float sheen[]={20.0};
-float lightPosition1[]={(float)width,(float)length,6.0,5.0};
-float lightPosition2[]={0,(float)length,6.0,5.0};
-float lightPosition3[]={0,0,6.0,5.0};
-float lightPosition4[]={(float)width,0,6.0,5.0};
+float lightPosition1[]={width-10,length-10,15.0,5.0};
+//float lightPosition2[]={0,length,6.0,5.0};
+//float lightPosition3[]={0,0,6.0,5.0};
+//float lightPosition4[]={width,0,6.0,5.0};
 float light[]={0.8,0.8,0.8,0.7};
 float environment[]={0.9,0.6,0.6,1.0};
 float floorColor[]={0.4,0.4,0.4};
@@ -33,7 +32,7 @@ float ceilingColor[]={0.55,0.4,0.4};
 float InWallColor[]={0.0,1.0,0.0};
 float CubeColor[]={1.0,0.0,0.0};
 int map[31][38];
-bool lost=true;
+bool lost=false;
 struct Vettori  //gestiscono la lookat
 {
 		float eye[3];
@@ -55,15 +54,15 @@ int
 generateX()
 {
 	srand (time (0));
-	int random=rand ()%31;
-	return random;
+	int random=rand ()%29;
+	return random+1;
 }
 int
 generateY()
 {
 	srand (time (0));
-	int random=rand ()%38;
-	return random;
+	int random=rand ()%36;
+	return random+1;
 }
 void
 loadMap(int random)
@@ -110,8 +109,8 @@ aerialWiew()
 	saveY=vettori.eye[1];
 	c=2;
 	aerial=true;
-	length=c*36;
-	width=c*29;
+	length=c*38;
+	width=c*31;
 	vettori.eye[0]=width/2;
 	vettori.eye[1]=length/2;
 	vettori.eye[2]=90;
@@ -120,26 +119,38 @@ aerialWiew()
 void
 standardWiew()
 {
-	c=6;
-	length=c*36;
-	width=c*29;
+	c=8;
+	length=c*38;
+	width=c*31;
 	aerial=false;
 	vettori.eye[0]=saveX;
 	vettori.eye[1]=saveY;
-	vettori.eye[2]=1.3;
+	vettori.eye[2]=1.20;
 	d=1.3;
 }
 void
 verify(int& x,int& y,int& posX,int& posY)
 {
 	if (map[x+1][y]==0)
+	{
 		posX+=5;
+		posY+=2;
+	}
 	else if (map[x][y+1]==0)
+	{
 		posY+=5;
+		posX+=2;
+	}
 	else if (map[x-1][y]==0)
+	{
 		posX-=5;
+		posY-=2;
+	}
 	else if (map[x][y-1]==0)
+	{
 		posY-=5;
+		posX-=2;
+	}
 }
 void
 initializateVision()
@@ -156,7 +167,7 @@ initializateVision()
 	verify (x,y,posX,posY);
 	vettori.eye[0]=posX;
 	vettori.eye[1]=posY;
-	vettori.eye[2]=1.3;
+	vettori.eye[2]=1.20;
 	vettori.direction[0]=1;
 	vettori.direction[1]=0;
 	vettori.direction[2]=1;
@@ -174,22 +185,8 @@ reset()
 	initializateVision ();
 }
 bool
-goForward()
+moving(int x,int y)
 {
-	int x=(int)(((vettori.eye[0]+confine)/c)+l*cos ((a*3.14)/180));
-	int y=(int)(((vettori.eye[1]+confine)/c)+l*sin ((a*3.14)/180));
-	if (map[x][y]==1)
-	{
-		cout<<"conflict with wall"<<endl;
-		return false;
-	}
-	return true;
-}
-bool
-goBackward()
-{
-	int x=(int)(((vettori.eye[0]+1)/c)-l*cos ((a*3.14)/180));
-	int y=(int)(((vettori.eye[1]+1)/c)-l*sin ((a*3.14)/180));
 	if (map[x][y]==1)
 	{
 		cout<<"conflict with wall"<<endl;
@@ -201,8 +198,8 @@ void
 init()
 {
 	glLightfv (GL_LIGHT0,GL_POSITION,lightPosition1);
-//	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition2);
-//	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition3);
+//	glLightfv (GL_LIGHT0,GL_POSITION,lightPosition2);
+// 	glLightfv (GL_LIGHT0,GL_POSITION,lightPosition3);
 //	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition4);
 	glLightfv (GL_LIGHT0,GL_DIFFUSE,light);
 	glLightfv (GL_LIGHT0,GL_SPECULAR,light);
@@ -232,21 +229,31 @@ keyboard(int key,int x,int y)
 		vettori.direction[0]=vettori.eye[0]+cos ((a*3.14)/180);
 		vettori.direction[1]=vettori.eye[1]+sin ((a*3.14)/180);
 	}
-	else if (key==GLUT_KEY_UP&&goForward ()&&!aerial)
+	else if (key==GLUT_KEY_UP)
 	{
-		vettori.eye[0]=vettori.eye[0]+l*cos ((a*3.14)/180);
-		vettori.eye[1]=vettori.eye[1]+l*sin ((a*3.14)/180);
-		vettori.direction[0]=vettori.eye[0]+cos ((a*3.14)/180);
-		vettori.direction[1]=vettori.eye[1]+sin ((a*3.14)/180);
-		cout<<"forward-"<<"current position"<<vettori.eye[0]<<","<<vettori.eye[1]<<endl;
+		int x=(int)(((vettori.eye[0]+h)/c)+l*cos ((a*3.14)/180));
+		int y=(int)(((vettori.eye[1]+h)/c)+l*sin ((a*3.14)/180));
+		if (moving (x,y)&&!aerial&&!lost)
+		{
+			vettori.eye[0]=vettori.eye[0]+l*cos ((a*3.14)/180);
+			vettori.eye[1]=vettori.eye[1]+l*sin ((a*3.14)/180);
+			vettori.direction[0]=vettori.eye[0]+cos ((a*3.14)/180);
+			vettori.direction[1]=vettori.eye[1]+sin ((a*3.14)/180);
+			cout<<"forward-"<<"current position"<<vettori.eye[0]<<","<<vettori.eye[1]<<endl;
+		}
 	}
-	else if (key==GLUT_KEY_DOWN&&goBackward ()&&!aerial)
+	else if (key==GLUT_KEY_DOWN)
 	{
-		vettori.eye[0]=vettori.eye[0]-l*cos ((a*3.14)/180);
-		vettori.eye[1]=vettori.eye[1]-l*sin ((a*3.14)/180);
-		vettori.direction[0]=vettori.eye[0]+cos ((a*3.14)/180);
-		vettori.direction[1]=vettori.eye[1]+sin ((a*3.14)/180);
-		cout<<"backward-"<<"current position"<<vettori.eye[0]<<","<<vettori.eye[1]<<endl;
+		int x=(int)(((vettori.eye[0]+h)/c)-l*cos ((a*3.14)/180));
+		int y=(int)(((vettori.eye[1]+h)/c)-l*sin ((a*3.14)/180));
+		if (moving (x,y)&&!aerial&&!lost)
+		{
+			vettori.eye[0]=vettori.eye[0]-l*cos ((a*3.14)/180);
+			vettori.eye[1]=vettori.eye[1]-l*sin ((a*3.14)/180);
+			vettori.direction[0]=vettori.eye[0]+cos ((a*3.14)/180);
+			vettori.direction[1]=vettori.eye[1]+sin ((a*3.14)/180);
+			cout<<"backward-"<<"current position"<<vettori.eye[0]<<","<<vettori.eye[1]<<endl;
+		}
 	}
 	glutPostRedisplay ();
 }
@@ -290,10 +297,10 @@ drawFloor()
 	glPushMatrix ();
 	glMaterialfv (GL_FRONT,GL_AMBIENT_AND_DIFFUSE,floorColor);
 	glBegin (GL_QUADS);
-	glVertex3f (width+h,0,-h);
-	glVertex3f (width+h,length+h,-h);
-	glVertex3f (0,length+h,-h);
-	glVertex3f (0,0,-h);
+	glVertex3f (width,-2,-h);
+	glVertex3f (width,length,-h);
+	glVertex3f (-2,length,-h);
+	glVertex3f (-2,-2,-h);
 	glEnd ();
 	glPopMatrix ();
 }
@@ -303,10 +310,10 @@ drawCeiling()
 	glPushMatrix ();
 	glMaterialfv (GL_FRONT,GL_AMBIENT_AND_DIFFUSE,ceilingColor);
 	glBegin (GL_QUADS);
-	glVertex3f (width+h,0,h);
-	glVertex3f (width+h,length,h);
-	glVertex3f (0,length+h,h);
-	glVertex3f (0,0,h);
+	glVertex3f (width,-2,h);
+	glVertex3f (width,length,h);
+	glVertex3f (-2,length,h);
+	glVertex3f (-2,-2,h);
 	glEnd ();
 	glPopMatrix ();
 }
