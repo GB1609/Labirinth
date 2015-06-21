@@ -33,6 +33,7 @@ float ceilingColor[]={0.55,0.4,0.4};
 float InWallColor[]={0.0,1.0,0.0};
 float CubeColor[]={1.0,0.0,0.0};
 int map[31][38];
+bool lost=true;
 struct Vettori  //gestiscono la lookat
 {
 		float eye[3];
@@ -54,46 +55,53 @@ int
 generateX()
 {
 	srand (time (0));
-	int random=rand ()%29;
+	int random=rand ()%31;
 	return random;
 }
 int
 generateY()
 {
 	srand (time (0));
-	int random=rand ()%36;
+	int random=rand ()%38;
 	return random;
 }
 void
-loadMap()
+loadMap(int random)
 {
-	srand (time (0));
-	int random=rand ()%4;
 	if (random==0)
 	{
 		ifstream in ("LabirinthMap1.txt");
 		assignValue (in);
 		in.close ();
+		cout<<"Stai giocando con il labirinto numero "<<random+1<<" Buona Fortuna"<<endl;
 	}
 	else if (random==1)
 	{
 		ifstream in ("LabirinthMap2.txt");
 		assignValue (in);
 		in.close ();
+		cout<<"Stai giocando con il labirinto numero "<<random+1<<" Buona Fortuna"<<endl;
 	}
 	else if (random==2)
 	{
 		ifstream in ("LabirinthMap3.txt");
 		assignValue (in);
 		in.close ();
+		cout<<"Stai giocando con il labirinto numero "<<random+1<<" Buona Fortuna"<<endl;
 	}
-	else
+	else if (random==3)
 	{
 		ifstream in ("LabirinthMap4.txt");
 		assignValue (in);
 		in.close ();
+		cout<<"Stai giocando con il labirinto numero "<<random+1<<" Buona Fortuna"<<endl;
 	}
-	cout<<"Stai giocando con il labirinto numero "<<random+1<<" Buona Fortuna"<<endl;
+	else if (random==4)
+	{
+		ifstream in ("GameOver.txt");
+		assignValue (in);
+		in.close ();
+	}
 }
 void
 aerialWiew()
@@ -155,6 +163,8 @@ initializateVision()
 	vettori.up[0]=0;
 	vettori.up[1]=0;
 	vettori.up[2]=3;
+	if (lost)
+		aerialWiew ();
 }
 void
 reset()
@@ -312,10 +322,23 @@ positionRotatingCube(int& i,int& j)
 	glColor3f (0,1,0);
 }
 void
+rotateCube(int value)
+{
+	rotate+=1.0f;
+	if (rotate>360)
+	{
+		rotate-=360;
+	}
+	glutPostRedisplay ();
+	glutTimerFunc (25,rotateCube,0);
+}
+void
 display(void)
 {
 	glClear (GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 	glMatrixMode (GL_MODELVIEW);
+	if (lost)
+		loadMap (4);
 	glPushMatrix ();
 	gluLookAt (vettori.eye[0],vettori.eye[1],vettori.eye[2],vettori.direction[0],vettori.direction[1],
 			vettori.direction[2],vettori.up[0],vettori.up[1],vettori.up[2]);
@@ -362,21 +385,12 @@ display(void)
 	glPopMatrix ();
 	glutSwapBuffers ();
 }
-void
-rotateCube(int value)
-{
-	rotate+=1.0f;
-	if (rotate>360)
-	{
-		rotate-=360;
-	}
-	glutPostRedisplay ();
-	glutTimerFunc (25,rotateCube,0);
-}
 int
 main(int argc,char **argv)
 {
-	loadMap ();
+	srand (time (0));
+	int random=rand ()%4;
+	loadMap (random);
 	glutInit (&argc,argv);
 	glutInitDisplayMode (GLUT_DOUBLE|GLUT_RGB|GLUT_DEPTH);
 	glutInitWindowSize (1200,500);
