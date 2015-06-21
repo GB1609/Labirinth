@@ -267,13 +267,19 @@ keyPressed(unsigned char key,int x,int y)
 	}
 	else if (key=='a'||key=='A')
 	{
-		aerialWiew ();
-		glutPostRedisplay ();
+		if (!lost&&!aerial)
+		{
+			aerialWiew ();
+			glutPostRedisplay ();
+		}
 	}
 	else if (key=='s'||key=='S')
 	{
-		standardWiew ();
-		glutPostRedisplay ();
+		if (!lost&&aerial)
+		{
+			standardWiew ();
+			glutPostRedisplay ();
+		}
 	}
 	else if (key=='r'||key=='R')
 	{
@@ -338,6 +344,13 @@ rotateCube(int value)
 	}
 	glutPostRedisplay ();
 	glutTimerFunc (25,rotateCube,0);
+}
+void
+gameOver(int value)
+{
+	lost=true;
+	initializateVision ();
+	glutPostRedisplay ();
 }
 void
 display(void)
@@ -410,5 +423,6 @@ main(int argc,char **argv)
 	glutDisplayFunc (display);
 	glutPostRedisplay ();
 	glutTimerFunc (25,rotateCube,0);
+	glutTimerFunc (3000000,gameOver,0);//gioco dura 5 minuti
 	glutMainLoop ();
 }
