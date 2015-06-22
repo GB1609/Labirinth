@@ -194,8 +194,10 @@ void
 reset()
 {
 	c=5;
-	aerial=true;
+	aerial=lost=win=false;
+	loadMap(generateXY(4));
 	initializateVision ();
+	glutPostRedisplay();
 }
 bool
 moving(int x,int y)
