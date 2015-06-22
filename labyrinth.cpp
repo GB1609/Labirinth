@@ -8,7 +8,7 @@
 #include <ctime>
 #include "iostream"
 using namespace std;
-float c=8;  //determina la grandezza del labirinto
+float c=5;  //determina la grandezza del labirinto
 const float h=c/2;  //meta diametro del cubo
 float saveX,saveY;
 float length=c*38;  //lunghezza matrice
@@ -33,6 +33,8 @@ float InWallColor[]={0.0,1.0,0.0};
 float CubeColor[]={1.0,0.0,0.0};
 int map[31][38];
 bool lost=false;
+bool win=false;
+bool profVuoleVincere=false;
 struct Vettori  //gestiscono la lookat
 {
 		float eye[3];
@@ -51,17 +53,10 @@ assignValue(ifstream& in)
 	}
 }
 int
-generateX()
+generateXY(int div)
 {
 	srand (time (0));
-	int random=rand ()%29;
-	return random+1;
-}
-int
-generateY()
-{
-	srand (time (0));
-	int random=rand ()%36;
+	int random=rand ()%div;
 	return random+1;
 }
 void
@@ -98,6 +93,12 @@ loadMap(int random)
 	else if (random==4)
 	{
 		ifstream in ("GameOver.txt");
+		assignValue (in);
+		in.close ();
+	}
+	else if (random==5)
+	{
+		ifstream in ("GameWin.txt");
 		assignValue (in);
 		in.close ();
 	}
@@ -155,12 +156,12 @@ verify(int& x,int& y,int& posX,int& posY)
 void
 initializateVision()
 {
-	int x=generateX ();
-	int y=generateY ();
+	int x=generateXY (29);
+	int y=generateXY (36);
 	while (map[x][y]==0)
 	{
-		x=generateX ();
-		y=generateY ();
+		x=generateXY (29);
+		y=generateXY (36);
 	}
 	int posX=x*c;
 	int posY=y*c;
@@ -178,19 +179,37 @@ initializateVision()
 		aerialWiew ();
 }
 void
+gameOver(int value)
+{
+	profVuoleVincere=false;
+	lost=true;
+	if (win)
+		loadMap (5);
+	else if (lost)
+		loadMap (4);
+	initializateVision ();
+	glutPostRedisplay ();
+}
+void
 reset()
 {
-	c=6;
+	c=5;
 	aerial=true;
 	initializateVision ();
 }
 bool
 moving(int x,int y)
 {
-	if (map[x][y]==1)
+	if (map[x][y]==1&&!profVuoleVincere)
 	{
 		cout<<"conflict with wall"<<endl;
 		return false;
+	}
+	else if (map[x][y]==2)
+	{
+		cout<<"Win!!!"<<endl;
+		win=true;
+		gameOver (0);
 	}
 	return true;
 }
@@ -267,7 +286,7 @@ keyPressed(unsigned char key,int x,int y)
 	}
 	else if (key=='a'||key=='A')
 	{
-		if (!lost&&!aerial)
+		if (!win&&!lost&&!aerial)
 		{
 			aerialWiew ();
 			glutPostRedisplay ();
@@ -275,7 +294,7 @@ keyPressed(unsigned char key,int x,int y)
 	}
 	else if (key=='s'||key=='S')
 	{
-		if (!lost&&aerial)
+		if (!win&&!lost&&aerial)
 		{
 			standardWiew ();
 			glutPostRedisplay ();
@@ -284,6 +303,11 @@ keyPressed(unsigned char key,int x,int y)
 	else if (key=='r'||key=='R')
 	{
 		reset ();
+		glutPostRedisplay ();
+	}
+	else if (key=='p'||key=='P')
+	{
+		profVuoleVincere=true;
 		glutPostRedisplay ();
 	}
 	else if (key==27)
@@ -346,19 +370,10 @@ rotateCube(int value)
 	glutTimerFunc (25,rotateCube,0);
 }
 void
-gameOver(int value)
-{
-	lost=true;
-	initializateVision ();
-	glutPostRedisplay ();
-}
-void
 display(void)
 {
 	glClear (GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 	glMatrixMode (GL_MODELVIEW);
-	if (lost)
-		loadMap (4);
 	glPushMatrix ();
 	gluLookAt (vettori.eye[0],vettori.eye[1],vettori.eye[2],vettori.direction[0],vettori.direction[1],
 			vettori.direction[2],vettori.up[0],vettori.up[1],vettori.up[2]);
@@ -386,10 +401,13 @@ display(void)
 				}
 				else
 				{
-					glPushMatrix ();
-					glTranslatef (i*c,j*c,0);
-					glutSolidCube (c);
-					glPopMatrix ();
+					if (!profVuoleVincere)
+					{
+						glPushMatrix ();
+						glTranslatef (i*c,j*c,0);
+						glutSolidCube (c);
+						glPopMatrix ();
+					}
 				}
 			}
 			else if (map[i][j]==2)
@@ -423,6 +441,6 @@ main(int argc,char **argv)
 	glutDisplayFunc (display);
 	glutPostRedisplay ();
 	glutTimerFunc (25,rotateCube,0);
-	glutTimerFunc (3000000,gameOver,0);//gioco dura 5 minuti
+	glutTimerFunc (300000,gameOver,0);  //gioco dura 5 minuti
 	glutMainLoop ();
 }
