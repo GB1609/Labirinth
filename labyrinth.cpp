@@ -196,6 +196,8 @@ void
 reset()
 {
 	c=5;
+	length=c*38;
+	width=c*31;
 	aerial=lost=win=false;
 	loadMap (generateXY (4));
 	initializateVision ();
