@@ -8,6 +8,7 @@
 #include <ctime>
 #include "iostream"
 using namespace std;
+int contatore=0;
 float c=5;  //determina la grandezza del labirinto
 const float h=c/2;  //meta diametro del cubo
 float saveX,saveY;
@@ -17,6 +18,7 @@ float a=0.0;  //angolo
 float da=1;
 float l=0.7;
 float d=1.3;  //dimensione cubo rotante
+float rimb=1.1;
 bool aerial=false;  //segnala se la visuale e dall'alto
 float rotate=0;
 float spec[]={0.5,0.5,0.5,1.0};
@@ -195,9 +197,9 @@ reset()
 {
 	c=5;
 	aerial=lost=win=false;
-	loadMap(generateXY(4));
+	loadMap (generateXY (4));
 	initializateVision ();
-	glutPostRedisplay();
+	glutPostRedisplay ();
 }
 bool
 moving(int x,int y)
@@ -211,7 +213,7 @@ moving(int x,int y)
 	{
 		cout<<"Win!!!"<<endl;
 		win=true;
-		gameOver (0);
+		glutPostRedisplay ();
 	}
 	return true;
 }
@@ -354,22 +356,35 @@ positionRotatingCube(int& i,int& j)
 {
 	glPushMatrix ();
 	glColor3f (1,0,0);
-	glTranslatef (i*c,j*c,1.3);
+	glTranslatef (i*c,j*c,rimb);
 	glRotatef (rotate,0,0,1.6);
-	glutSolidCube (d);
+	if (win)
+		glutSolidSphere (d,30,30);
+	else
+		glutSolidCube (d);
 	glPopMatrix ();
 	glColor3f (0,1,0);
 }
 void
 rotateCube(int value)
 {
+	if (win)
+	{
+		contatore++;
+		rimb-=0.13;
+		if (rimb<=-1)
+			rimb=1.1;
+	}
 	rotate+=1.0f;
 	if (rotate>360)
 	{
 		rotate-=360;
 	}
 	glutPostRedisplay ();
-	glutTimerFunc (25,rotateCube,0);
+	if (contatore<1000)
+		glutTimerFunc (25,rotateCube,0);
+	else
+		gameOver(0);
 }
 void
 display(void)
