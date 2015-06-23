@@ -192,17 +192,6 @@ gameOver(int value)
 	initializateVision ();
 	glutPostRedisplay ();
 }
-void
-reset()
-{
-	c=5;
-	length=c*38;
-	width=c*31;
-	aerial=lost=win=false;
-	loadMap (generateXY (4));
-	initializateVision ();
-	glutPostRedisplay ();
-}
 bool
 moving(int x,int y)
 {
@@ -236,6 +225,89 @@ init()
 	glMatrixMode (GL_PROJECTION);
 	glLoadIdentity ();
 	glEnable (GL_DEPTH_TEST);
+}
+void
+reshape(int w,int h)
+{
+	glViewport (0,0,w,h);
+	glMatrixMode (GL_PROJECTION);
+	glLoadIdentity ();
+	gluPerspective (45.0,(double)w/(double)h,1.0,100);
+}
+void
+drawFloor()
+{
+	glPushMatrix ();
+	glMaterialfv (GL_FRONT,GL_AMBIENT_AND_DIFFUSE,floorColor);
+	glBegin (GL_QUADS);
+	glVertex3f (width,-2,-h);
+	glVertex3f (width,length,-h);
+	glVertex3f (-2,length,-h);
+	glVertex3f (-2,-2,-h);
+	glEnd ();
+	glPopMatrix ();
+}
+void
+drawCeiling()
+{
+	glPushMatrix ();
+	glMaterialfv (GL_FRONT,GL_AMBIENT_AND_DIFFUSE,ceilingColor);
+	glBegin (GL_QUADS);
+	glVertex3f (width,-2,h);
+	glVertex3f (width,length,h);
+	glVertex3f (-2,length,h);
+	glVertex3f (-2,-2,h);
+	glEnd ();
+	glPopMatrix ();
+}
+void
+positionRotatingCube(int& i,int& j)
+{
+	glPushMatrix ();
+	glColor3f (1,0,0);
+	glTranslatef (i*c,j*c,rimb);
+	glRotatef (rotate,0,0,1.6);
+	if (win)
+		glutSolidSphere (d,30,30);
+	else
+		glutSolidCube (d);
+	glPopMatrix ();
+	glColor3f (0,1,0);
+}
+void
+rotateCube(int value)
+{
+	if (win)
+	{
+		contatore++;
+		rimb-=0.13;
+		if (rimb<=-1)
+			rimb=1.1;
+	}
+	rotate+=1.0f;
+	if (rotate>360)
+	{
+		rotate-=360;
+	}
+	glutPostRedisplay ();
+	if (contatore<500)
+		glutTimerFunc (25,rotateCube,0);
+	else
+		gameOver (0);
+}
+void
+reset()
+{
+	c=5;
+	length=c*38;
+	width=c*31;
+	aerial=lost=win=profVuoleVincere=false;
+	contatore=0;
+	glutTimerFunc (25,rotateCube,0);
+	glutTimerFunc (300000,gameOver,0);
+	loadMap (generateXY (4));
+	initializateVision ();
+	glutPostRedisplay ();
 }
 void
 keyboard(int key,int x,int y)
@@ -318,75 +390,6 @@ keyPressed(unsigned char key,int x,int y)
 	}
 	else if (key==27)
 		exit (0);
-}
-void
-reshape(int w,int h)
-{
-	glViewport (0,0,w,h);
-	glMatrixMode (GL_PROJECTION);
-	glLoadIdentity ();
-	gluPerspective (45.0,(double)w/(double)h,1.0,100);
-}
-void
-drawFloor()
-{
-	glPushMatrix ();
-	glMaterialfv (GL_FRONT,GL_AMBIENT_AND_DIFFUSE,floorColor);
-	glBegin (GL_QUADS);
-	glVertex3f (width,-2,-h);
-	glVertex3f (width,length,-h);
-	glVertex3f (-2,length,-h);
-	glVertex3f (-2,-2,-h);
-	glEnd ();
-	glPopMatrix ();
-}
-void
-drawCeiling()
-{
-	glPushMatrix ();
-	glMaterialfv (GL_FRONT,GL_AMBIENT_AND_DIFFUSE,ceilingColor);
-	glBegin (GL_QUADS);
-	glVertex3f (width,-2,h);
-	glVertex3f (width,length,h);
-	glVertex3f (-2,length,h);
-	glVertex3f (-2,-2,h);
-	glEnd ();
-	glPopMatrix ();
-}
-void
-positionRotatingCube(int& i,int& j)
-{
-	glPushMatrix ();
-	glColor3f (1,0,0);
-	glTranslatef (i*c,j*c,rimb);
-	glRotatef (rotate,0,0,1.6);
-	if (win)
-		glutSolidSphere (d,30,30);
-	else
-		glutSolidCube (d);
-	glPopMatrix ();
-	glColor3f (0,1,0);
-}
-void
-rotateCube(int value)
-{
-	if (win)
-	{
-		contatore++;
-		rimb-=0.13;
-		if (rimb<=-1)
-			rimb=1.1;
-	}
-	rotate+=1.0f;
-	if (rotate>360)
-	{
-		rotate-=360;
-	}
-	glutPostRedisplay ();
-	if (contatore<1000)
-		glutTimerFunc (25,rotateCube,0);
-	else
-		gameOver(0);
 }
 void
 display(void)
