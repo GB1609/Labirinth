@@ -6,9 +6,15 @@
 #include "cstring"
 #include <cstdlib>
 #include <ctime>
+#include "tga.h"
 #include "iostream"
 using namespace std;
 int contatore=0;
+float normalUp[3]={0,0,1};
+float normalFront[3]={1,0,0};
+float normalRight[3]={0,1,0};
+float normalLeft[3]={0,-1,0};
+float normalBack[3]={-1,0,0};
 float c=5;  //determina la grandezza del labirinto
 const float h=c/2;  //meta diametro del cubo
 float saveX,saveY;
@@ -29,20 +35,44 @@ float lightPosition1[]={width-10,length-10,15.0,5.0};
 //float lightPosition4[]={width,0,6.0,5.0};
 float light[]={0.8,0.8,0.8,0.7};
 float environment[]={0.9,0.6,0.6,1.0};
-float floorColor[]={0.4,0.4,0.4};
-float ceilingColor[]={0.55,0.4,0.4};
-float InWallColor[]={0.0,1.0,0.0};
 float CubeColor[]={1.0,0.0,0.0};
+float CubeColor1[]={0.0,0.0,1.0};
+const int numTextures=5;
+GLuint textures[numTextures];
+const char *textureFile[numTextures]={"texture/ceiling.tga","texture/cube.tga","texture/floor.tga","texture/inWall.tga",
+		"texture/outWall.tga"};
 int map[31][38];
 bool lost=false;
 bool win=false;
 bool profVuoleVincere=false;
-struct Vettori  //gestiscono la lookat
+struct VectorLookAt  //gestiscono la lookat
 {
 		float eye[3];
 		float direction[3];
 		float up[3];
-} vettori;
+} vectorLookAt;
+void
+loadTextures()
+{
+	GLbyte* pBytes;
+	GLint iWidth,iHeight,iComponents;
+	GLenum eFormat;
+	GLubyte i;
+	glEnable (GL_TEXTURE_2D);
+	glTexEnvi (GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
+	glGenTextures (numTextures,textures);
+	for (i=0;i<numTextures;i++)  // Load texture
+	{
+		glBindTexture (GL_TEXTURE_2D,textures[i]);
+		pBytes=gltLoadTGA (textureFile[i],&iWidth,&iHeight,&iComponents,&eFormat);
+		glTexImage2D (GL_TEXTURE_2D,0,iComponents,iWidth,iHeight,0,eFormat,GL_UNSIGNED_BYTE,pBytes);
+		free (pBytes);
+		glTexParameteri (GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+		glTexParameteri (GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+		glTexParameteri (GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
+		glTexParameteri (GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
+	}
+}
 void
 assignValue(ifstream& in)
 {
@@ -66,41 +96,41 @@ loadMap(int random)
 {
 	if (random==0)
 	{
-		ifstream in ("LabirinthMap1.txt");
+		ifstream in ("Maps/LabirinthMap1.txt");
 		assignValue (in);
 		in.close ();
 		cout<<"Stai giocando con il labirinto numero "<<random+1<<" Buona Fortuna"<<endl;
 	}
 	else if (random==1)
 	{
-		ifstream in ("LabirinthMap2.txt");
+		ifstream in ("Maps/LabirinthMap2.txt");
 		assignValue (in);
 		in.close ();
 		cout<<"Stai giocando con il labirinto numero "<<random+1<<" Buona Fortuna"<<endl;
 	}
 	else if (random==2)
 	{
-		ifstream in ("LabirinthMap3.txt");
+		ifstream in ("Maps/LabirinthMap3.txt");
 		assignValue (in);
 		in.close ();
 		cout<<"Stai giocando con il labirinto numero "<<random+1<<" Buona Fortuna"<<endl;
 	}
 	else if (random==3)
 	{
-		ifstream in ("LabirinthMap4.txt");
+		ifstream in ("Maps/LabirinthMap4.txt");
 		assignValue (in);
 		in.close ();
 		cout<<"Stai giocando con il labirinto numero "<<random+1<<" Buona Fortuna"<<endl;
 	}
 	else if (random==4)
 	{
-		ifstream in ("GameOver.txt");
+		ifstream in ("Maps/GameOver.txt");
 		assignValue (in);
 		in.close ();
 	}
 	else if (random==5)
 	{
-		ifstream in ("GameWin.txt");
+		ifstream in ("Maps/GameWin.txt");
 		assignValue (in);
 		in.close ();
 	}
@@ -108,27 +138,27 @@ loadMap(int random)
 void
 aerialWiew()
 {
-	saveX=vettori.eye[0];
-	saveY=vettori.eye[1];
+	saveX=vectorLookAt.eye[0];
+	saveY=vectorLookAt.eye[1];
 	c=2;
 	aerial=true;
 	length=c*38;
 	width=c*31;
-	vettori.eye[0]=width/2;
-	vettori.eye[1]=length/2;
-	vettori.eye[2]=90;
+	vectorLookAt.eye[0]=width/2;
+	vectorLookAt.eye[1]=length/2;
+	vectorLookAt.eye[2]=90;
 	d=0.8;
 }
 void
 standardWiew()
 {
-	c=8;
+	c=5;
 	length=c*38;
 	width=c*31;
 	aerial=false;
-	vettori.eye[0]=saveX;
-	vettori.eye[1]=saveY;
-	vettori.eye[2]=1.20;
+	vectorLookAt.eye[0]=saveX;
+	vectorLookAt.eye[1]=saveY;
+	vectorLookAt.eye[2]=1.20;
 	d=1.3;
 }
 void
@@ -136,23 +166,20 @@ verify(int& x,int& y,int& posX,int& posY)
 {
 	if (map[x+1][y]==0)
 	{
-		posX+=5;
-		posY+=2;
+		posX+=c;
 	}
 	else if (map[x][y+1]==0)
 	{
-		posY+=5;
-		posX+=2;
+		posY+=c;
+
 	}
 	else if (map[x-1][y]==0)
 	{
-		posX-=5;
-		posY-=2;
+		posX-=c;
 	}
 	else if (map[x][y-1]==0)
 	{
-		posY-=5;
-		posX-=2;
+		posY-=c;
 	}
 }
 void
@@ -160,7 +187,7 @@ initializateVision()
 {
 	int x=generateXY (29);
 	int y=generateXY (36);
-	while (map[x][y]==0)
+	while (map[x][y]==0||map[x][y]==2)
 	{
 		x=generateXY (29);
 		y=generateXY (36);
@@ -168,15 +195,15 @@ initializateVision()
 	int posX=x*c;
 	int posY=y*c;
 	verify (x,y,posX,posY);
-	vettori.eye[0]=posX;
-	vettori.eye[1]=posY;
-	vettori.eye[2]=1.20;
-	vettori.direction[0]=1;
-	vettori.direction[1]=0;
-	vettori.direction[2]=1;
-	vettori.up[0]=0;
-	vettori.up[1]=0;
-	vettori.up[2]=3;
+	vectorLookAt.eye[0]=posX;
+	vectorLookAt.eye[1]=posY;
+	vectorLookAt.eye[2]=1.20;
+	vectorLookAt.direction[0]=vectorLookAt.eye[0]+cos ((3.14*a)/180);
+	vectorLookAt.direction[1]=vectorLookAt.eye[1]+sin ((3.14*a)/180);
+	vectorLookAt.direction[2]=1;
+	vectorLookAt.up[0]=0;
+	vectorLookAt.up[1]=0;
+	vectorLookAt.up[2]=3;
 	if (lost)
 		aerialWiew ();
 }
@@ -238,12 +265,16 @@ void
 drawFloor()
 {
 	glPushMatrix ();
-	glMaterialfv (GL_FRONT,GL_AMBIENT_AND_DIFFUSE,floorColor);
+	glBindTexture (GL_TEXTURE_2D,textures[2]);
 	glBegin (GL_QUADS);
-	glVertex3f (width,-2,-h);
+	glTexCoord2f (0.0f,0.0f);
+	glVertex3f (0,0,-h);
+	glTexCoord2f (0.0f,1.0f);
+	glVertex3f (0,length,-h);
+	glTexCoord2f (1.0f,1.0f);
 	glVertex3f (width,length,-h);
-	glVertex3f (-2,length,-h);
-	glVertex3f (-2,-2,-h);
+	glTexCoord2f (1.0f,0.0f);
+	glVertex3f (width,0,-h);
 	glEnd ();
 	glPopMatrix ();
 }
@@ -251,12 +282,16 @@ void
 drawCeiling()
 {
 	glPushMatrix ();
-	glMaterialfv (GL_FRONT,GL_AMBIENT_AND_DIFFUSE,ceilingColor);
+	glBindTexture (GL_TEXTURE_2D,textures[0]);
 	glBegin (GL_QUADS);
-	glVertex3f (width,-2,h);
+	glTexCoord2f (0.0f,0.0f);
+	glVertex3f (0,0,h);
+	glTexCoord2f (0.0f,1.0f);
+	glVertex3f (0,length,h);
+	glTexCoord2f (1.0f,1.0f);
 	glVertex3f (width,length,h);
-	glVertex3f (-2,length,h);
-	glVertex3f (-2,-2,h);
+	glTexCoord2f (1.0f,0.0f);
+	glVertex3f (width,0,h);
 	glEnd ();
 	glPopMatrix ();
 }
@@ -316,40 +351,40 @@ keyboard(int key,int x,int y)
 	{
 		cout<<"left"<<endl;
 		a=a+da;
-		vettori.direction[0]=vettori.eye[0]+cos ((a*3.14)/180);
-		vettori.direction[1]=vettori.eye[1]+sin ((a*3.14)/180);
+		vectorLookAt.direction[0]=vectorLookAt.eye[0]+cos ((a*3.14)/180);
+		vectorLookAt.direction[1]=vectorLookAt.eye[1]+sin ((a*3.14)/180);
 	}
 	else if (key==GLUT_KEY_RIGHT)
 	{
 		cout<<"right"<<endl;
 		a=a-da;
-		vettori.direction[0]=vettori.eye[0]+cos ((a*3.14)/180);
-		vettori.direction[1]=vettori.eye[1]+sin ((a*3.14)/180);
+		vectorLookAt.direction[0]=vectorLookAt.eye[0]+cos ((a*3.14)/180);
+		vectorLookAt.direction[1]=vectorLookAt.eye[1]+sin ((a*3.14)/180);
 	}
 	else if (key==GLUT_KEY_UP)
 	{
-		int x=(int)(((vettori.eye[0]+h)/c)+l*cos ((a*3.14)/180));
-		int y=(int)(((vettori.eye[1]+h)/c)+l*sin ((a*3.14)/180));
+		int x=(int)(((vectorLookAt.eye[0])/c)+l*cos ((a*3.14)/180));
+		int y=(int)(((vectorLookAt.eye[1])/c)+l*sin ((a*3.14)/180));
 		if (moving (x,y)&&!aerial&&!lost)
 		{
-			vettori.eye[0]=vettori.eye[0]+l*cos ((a*3.14)/180);
-			vettori.eye[1]=vettori.eye[1]+l*sin ((a*3.14)/180);
-			vettori.direction[0]=vettori.eye[0]+cos ((a*3.14)/180);
-			vettori.direction[1]=vettori.eye[1]+sin ((a*3.14)/180);
-			cout<<"forward-"<<"current position"<<vettori.eye[0]<<","<<vettori.eye[1]<<endl;
+			vectorLookAt.eye[0]=vectorLookAt.eye[0]+l*cos ((a*3.14)/180);
+			vectorLookAt.eye[1]=vectorLookAt.eye[1]+l*sin ((a*3.14)/180);
+			vectorLookAt.direction[0]=vectorLookAt.eye[0]+cos ((a*3.14)/180);
+			vectorLookAt.direction[1]=vectorLookAt.eye[1]+sin ((a*3.14)/180);
+			cout<<"forward-"<<"current position"<<vectorLookAt.eye[0]<<","<<vectorLookAt.eye[1]<<endl;
 		}
 	}
 	else if (key==GLUT_KEY_DOWN)
 	{
-		int x=(int)(((vettori.eye[0]+h)/c)-l*cos ((a*3.14)/180));
-		int y=(int)(((vettori.eye[1]+h)/c)-l*sin ((a*3.14)/180));
+		int x=(int)(((vectorLookAt.eye[0])/c)-l*cos ((a*3.14)/180));
+		int y=(int)(((vectorLookAt.eye[1])/c)-l*sin ((a*3.14)/180));
 		if (moving (x,y)&&!aerial&&!lost)
 		{
-			vettori.eye[0]=vettori.eye[0]-l*cos ((a*3.14)/180);
-			vettori.eye[1]=vettori.eye[1]-l*sin ((a*3.14)/180);
-			vettori.direction[0]=vettori.eye[0]+cos ((a*3.14)/180);
-			vettori.direction[1]=vettori.eye[1]+sin ((a*3.14)/180);
-			cout<<"backward-"<<"current position"<<vettori.eye[0]<<","<<vettori.eye[1]<<endl;
+			vectorLookAt.eye[0]=vectorLookAt.eye[0]-l*cos ((a*3.14)/180);
+			vectorLookAt.eye[1]=vectorLookAt.eye[1]-l*sin ((a*3.14)/180);
+			vectorLookAt.direction[0]=vectorLookAt.eye[0]+cos ((a*3.14)/180);
+			vectorLookAt.direction[1]=vectorLookAt.eye[1]+sin ((a*3.14)/180);
+			cout<<"backward-"<<"current position"<<vectorLookAt.eye[0]<<","<<vectorLookAt.eye[1]<<endl;
 		}
 	}
 	glutPostRedisplay ();
@@ -392,20 +427,80 @@ keyPressed(unsigned char key,int x,int y)
 		exit (0);
 }
 void
+drawWall(int i,int j)
+{
+	i=i*c;
+	j=j*c;
+	int ic=i+c;
+	int jc=j+c;
+	glBegin (GL_QUADS);
+
+	glTexCoord2f (1,0);
+	glVertex3f (j,i,h);
+	glTexCoord2f (1,1);
+	glVertex3f (j,ic,h);
+	glTexCoord2f (0,1);
+	glVertex3f (jc,ic,h);
+	glTexCoord2f (0,0);
+	glVertex3f (jc,i,h);
+
+	glTexCoord2f (1,1);
+	glVertex3f (jc,ic,h);
+	glTexCoord2f (0,1);
+	glVertex3f (j,ic,h);
+	glTexCoord2f (0,0);
+	glVertex3f (j,ic,-h);
+	glTexCoord2f (1,0);
+	glVertex3f (jc,ic,-h);
+	glTexCoord2f (1,1);
+	glVertex3f (j,ic,h);
+	glTexCoord2f (0,1);
+	glVertex3f (j,i,h);
+	glTexCoord2f (0,0);
+	glVertex3f (j,i,-h);
+	glTexCoord2f (1,0);
+	glVertex3f (j,ic,-h);
+	glTexCoord2f (0,0);
+	glVertex3f (j,i,-h);
+	glTexCoord2f (1,0);
+	glVertex3f (jc,i,-h);
+	glTexCoord2f (1,1);
+	glVertex3f (jc,i,h);
+	glTexCoord2f (0,1);
+	glVertex3f (j,i,h);
+	glTexCoord2f (0,1);
+	glVertex3f (jc,ic,h);
+	glTexCoord2f (1,1);
+	glVertex3f (jc,i,h);
+	glTexCoord2f (1,0);
+	glVertex3f (jc,i,-h);
+	glTexCoord2f (0,0);
+	glVertex3f (jc,ic,-h);
+	glEnd ();
+}
+void
 display(void)
 {
 	glClear (GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 	glMatrixMode (GL_MODELVIEW);
 	glPushMatrix ();
-	gluLookAt (vettori.eye[0],vettori.eye[1],vettori.eye[2],vettori.direction[0],vettori.direction[1],
-			vettori.direction[2],vettori.up[0],vettori.up[1],vettori.up[2]);
+	glColor3f (0,1,0);
+	gluLookAt (vectorLookAt.eye[0],vectorLookAt.eye[1],vectorLookAt.eye[2],vectorLookAt.direction[0],
+			vectorLookAt.direction[1],vectorLookAt.direction[2],vectorLookAt.up[0],vectorLookAt.up[1],
+			vectorLookAt.up[2]);
 	drawFloor ();
 	if (!aerial)
 		drawCeiling ();
-	glColor3f (0,1,0);
-	glMaterialfv (GL_FRONT,GL_AMBIENT_AND_DIFFUSE,InWallColor);
-	glMaterialfv (GL_FRONT,GL_SPECULAR,spec);
-	glMaterialfv (GL_FRONT,GL_SHININESS,sheen);
+	else
+	{
+//		glPushMatrix ();
+//		glMaterialfv (GL_FRONT,GL_AMBIENT_AND_DIFFUSE,CubeColor1);
+//		glMaterialfv (GL_FRONT,GL_SPECULAR,spec);
+//		glMaterialfv (GL_FRONT,GL_SHININESS,sheen);
+//		glTranslatef ((saveX/5)*2,(saveY/5)*2,rimb);
+//		glutSolidCube (rimb);
+//		glPopMatrix ();
+	}
 	for (int i=0;i<31;i++)
 	{
 		for (int j=0;j<38;j++)
@@ -415,31 +510,28 @@ display(void)
 				if (i==0||j==0||i==30||j==37)
 				{
 					glPushMatrix ();
-					glMaterialfv (GL_FRONT,GL_AMBIENT_AND_DIFFUSE,floorColor);
-					glTranslatef (i*c,j*c,0);
-					glutSolidCube (c);
+					glBindTexture (GL_TEXTURE_2D,textures[4]);
+					drawWall (j,i);
 					glPopMatrix ();
-					glMaterialfv (GL_FRONT,GL_AMBIENT_AND_DIFFUSE,InWallColor);
 				}
 				else
 				{
 					if (!profVuoleVincere)
 					{
 						glPushMatrix ();
-						glTranslatef (i*c,j*c,0);
-						glutSolidCube (c);
+						glBindTexture (GL_TEXTURE_2D,textures[3]);
+						drawWall (j,i);
 						glPopMatrix ();
 					}
 				}
 			}
-			else if (map[i][j]==2)
-			{
-				glPushMatrix ();
-				glMaterialfv (GL_FRONT,GL_AMBIENT_AND_DIFFUSE,CubeColor);
-				positionRotatingCube (i,j);
-				glPopMatrix ();
-				glMaterialfv (GL_FRONT,GL_AMBIENT_AND_DIFFUSE,InWallColor);
-			}
+//			else if (map[i][j]==2)
+//			{
+//				glPushMatrix ();
+//				glMaterialfv (GL_FRONT,GL_AMBIENT_AND_DIFFUSE,CubeColor);
+//				positionRotatingCube (i,j);
+//				glPopMatrix ();
+//			}
 		}
 	}
 	glPopMatrix ();
@@ -464,5 +556,7 @@ main(int argc,char **argv)
 	glutPostRedisplay ();
 	glutTimerFunc (25,rotateCube,0);
 	glutTimerFunc (300000,gameOver,0);  //gioco dura 5 minuti
+	loadTextures ();
 	glutMainLoop ();
+	glDeleteTextures (5,textures);
 }
