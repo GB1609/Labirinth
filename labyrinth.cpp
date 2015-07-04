@@ -10,11 +10,12 @@
 #include "iostream"
 using namespace std;
 int contatore=0;
-float normalUp[3]={0,0,1};
-float normalFront[3]={1,0,0};
-float normalRight[3]={0,1,0};
-float normalLeft[3]={0,-1,0};
-float normalBack[3]={-1,0,0};
+GLfloat normalUp[3]={0,0,1};
+GLfloat normalDown[3]={0,0,-1};
+GLfloat normalFront[3]={1,1,0};
+GLfloat normalRight[3]={-1,1,0};
+GLfloat normalLeft[3]={1,-1,0};
+GLfloat normalBack[3]={-1,-1,0};
 float c=5;  //determina la grandezza del labirinto
 const float h=c/2;  //meta diametro del cubo
 float saveX,saveY;
@@ -34,7 +35,7 @@ float lightPosition1[]={width-10,length-10,15.0,5.0};
 //float lightPosition3[]={0,0,6.0,5.0};
 //float lightPosition4[]={width,0,6.0,5.0};
 float light[]={0.8,0.8,0.8,0.7};
-float environment[]={0.9,0.6,0.6,1.0};
+float environment[]={0.7,0.5,0.5,1.0};
 float CubeColor[]={1.0,0.0,0.0};
 float CubeColor1[]={0.0,0.0,1.0};
 const int numTextures=5;
@@ -267,6 +268,7 @@ drawFloor()
 	glPushMatrix ();
 	glBindTexture (GL_TEXTURE_2D,textures[2]);
 	glBegin (GL_QUADS);
+	glNormal3fv(normalUp);
 	glTexCoord2f (0.0f,0.0f);
 	glVertex3f (0,0,-h);
 	glTexCoord2f (0.0f,1.0f);
@@ -284,6 +286,7 @@ drawCeiling()
 	glPushMatrix ();
 	glBindTexture (GL_TEXTURE_2D,textures[0]);
 	glBegin (GL_QUADS);
+	glNormal3fv(normalDown);
 	glTexCoord2f (0.0f,0.0f);
 	glVertex3f (0,0,h);
 	glTexCoord2f (0.0f,1.0f);
@@ -434,16 +437,19 @@ drawWall(int i,int j)
 	int ic=i+c;
 	int jc=j+c;
 	glBegin (GL_QUADS);
-
-	glTexCoord2f (1,0);
-	glVertex3f (j,i,h);
-	glTexCoord2f (1,1);
-	glVertex3f (j,ic,h);
-	glTexCoord2f (0,1);
-	glVertex3f (jc,ic,h);
-	glTexCoord2f (0,0);
-	glVertex3f (jc,i,h);
-
+	if (aerial)
+	{
+		glNormal3fv(normalUp);
+		glTexCoord2f (1,0);
+		glVertex3f (j,i,h);
+		glTexCoord2f (1,1);
+		glVertex3f (j,ic,h);
+		glTexCoord2f (0,1);
+		glVertex3f (jc,ic,h);
+		glTexCoord2f (0,0);
+		glVertex3f (jc,i,h);
+	}
+	glNormal3fv(normalFront);
 	glTexCoord2f (1,1);
 	glVertex3f (jc,ic,h);
 	glTexCoord2f (0,1);
@@ -452,6 +458,7 @@ drawWall(int i,int j)
 	glVertex3f (j,ic,-h);
 	glTexCoord2f (1,0);
 	glVertex3f (jc,ic,-h);
+	glNormal3fv(normalLeft);
 	glTexCoord2f (1,1);
 	glVertex3f (j,ic,h);
 	glTexCoord2f (0,1);
@@ -460,6 +467,7 @@ drawWall(int i,int j)
 	glVertex3f (j,i,-h);
 	glTexCoord2f (1,0);
 	glVertex3f (j,ic,-h);
+	glNormal3fv(normalFront);
 	glTexCoord2f (0,0);
 	glVertex3f (j,i,-h);
 	glTexCoord2f (1,0);
@@ -468,6 +476,7 @@ drawWall(int i,int j)
 	glVertex3f (jc,i,h);
 	glTexCoord2f (0,1);
 	glVertex3f (j,i,h);
+	glNormal3fv(normalRight);
 	glTexCoord2f (0,1);
 	glVertex3f (jc,ic,h);
 	glTexCoord2f (1,1);
@@ -558,5 +567,5 @@ main(int argc,char **argv)
 	glutTimerFunc (300000,gameOver,0);  //gioco dura 5 minuti
 	loadTextures ();
 	glutMainLoop ();
-	glDeleteTextures (5,textures);
+	glDeleteTextures (numTextures,textures);
 }
