@@ -25,19 +25,20 @@ float da=1;
 float l=0.7;
 float rimb=1.1;
 bool aerial=false;  //segnala se la visuale e dall'alto
+bool decide=false;
 float rotate=0;
 float spec[]={0.5,0.5,0.5,1.0};
 float sheen[]={20.0};
-float lightPosition1[]={width,length,10.0,5.0};
-//float lightPosition2[]={0,length,6.0,5.0};
-//float lightPosition3[]={0,0,6.0,5.0};
-//float lightPosition4[]={width,0,6.0,5.0};
-float light[]={0.8,0.8,0.8,0.7};
-float environment[]={0.7,0.7,0.7,1.0};
-const int numTextures=9;
+float lightPosition1[]={width/2,length/2,2.0,1.0};
+float light[]={0.9,0.9,0.9,1};
+GLfloat fogColor[]={0.9,0.3,0.3,0};
+GLfloat spotDirection[3];
+float environment[]={0.8,0.8,0.8,1.0};
+const int numTextures=7;
+unsigned int millis=300000;
 GLuint textures[numTextures];
-const char *textureFile[numTextures]={"texture/ceiling.tga","texture/cube.tga","texture/floor.tga","texture/inWall.tga",
-		"texture/outWall.tga","texture/player.tga","texture/sphere.tga","texture/fire.tga","texture/floorFire.tga"};
+const char *textureFile[numTextures]={"texture/cube.tga","texture/floor.tga","texture/inWall.tga",
+		"texture/outWall.tga","texture/player.tga","texture/sphere.tga","texture/floorFire.tga"};
 int map[31][38];
 bool lost=false;
 bool win=false;
@@ -154,7 +155,10 @@ aerialWiew()
 {
 	vectorLookAt.eye[0]/=c;
 	vectorLookAt.eye[1]/=c;
-	c=2;
+	if (lost||win)
+		c=2;
+	else
+		c=4;
 	aerial=true;
 	length=c*38;
 	width=c*31;
@@ -170,7 +174,7 @@ aerialWiew()
 	}
 	vectorLookAt.direction[0]=vectorLookAt.eye[0]+cos ((a*3.14)/180);
 	vectorLookAt.direction[1]=vectorLookAt.eye[1]+sin ((a*3.14)/180);
-	vectorLookAt.eye[2]=90;
+	vectorLookAt.eye[2]=85;
 }
 void
 standardWiew()
@@ -221,6 +225,9 @@ initializateVision()
 	vectorLookAt.up[0]=0;
 	vectorLookAt.up[1]=0;
 	vectorLookAt.up[2]=3;
+	spotDirection[0]=vectorLookAt.direction[0];
+	spotDirection[1]=vectorLookAt.direction[1];
+	spotDirection[2]=vectorLookAt.direction[2];
 }
 void
 gameOver(int value)
@@ -231,6 +238,7 @@ gameOver(int value)
 		loadMap (5);
 	else if (lost)
 		loadMap (4);
+	decide=true;
 	aerialWiew ();
 	glutPostRedisplay ();
 }
@@ -259,14 +267,17 @@ void
 init()
 {
 	glLightfv (GL_LIGHT0,GL_POSITION,lightPosition1);
-//	glLightfv (GL_LIGHT0,GL_POSITION,lightPosition2);
-// 	glLightfv (GL_LIGHT0,GL_POSITION,lightPosition3);
-//	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition4);
 	glLightfv (GL_LIGHT0,GL_DIFFUSE,light);
 	glLightfv (GL_LIGHT0,GL_SPECULAR,light);
 	glLightModelfv (GL_LIGHT_MODEL_AMBIENT,environment);
+	glLightfv (GL_LIGHT0,GL_DIFFUSE,environment);
 	glEnable (GL_LIGHTING);  //abilita luce ambiente
 	glEnable (GL_LIGHT0);  //abilita luci
+	glEnable (GL_NORMALIZE);
+	glFogf (GL_FOG_START,-20.0);
+	glFogf (GL_FOG_END,50.0);
+	glFogfv (GL_FOG_COLOR,fogColor);
+	glFogi (GL_FOG_MODE,GL_LINEAR);
 	glShadeModel (GL_SMOOTH);
 	glClearColor (0,0,0,0);
 	glMatrixMode (GL_PROJECTION);
@@ -282,20 +293,20 @@ reshape(int w,int h)
 	gluPerspective (45.0,(double)w/(double)h,1.0,100);
 }
 void
-drawFloor()
+drawFloor(bool decide)
 {
 	int xi=0;
 	int xy=0;
-	if (lost||win)
+	if (decide)
 	{
-		xi=-50;
-		xy=-50;
+		xi=-100;
+		xy=-100;
 		length=500;
 		width=500;
-		glBindTexture (GL_TEXTURE_2D,textures[8]);
+		glBindTexture (GL_TEXTURE_2D,textures[6]);
 	}
 	else
-		glBindTexture (GL_TEXTURE_2D,textures[2]);
+		glBindTexture (GL_TEXTURE_2D,textures[1]);
 	glPushMatrix ();
 	glBegin (GL_QUADS);
 	glNormal3fv (normalUp);
@@ -313,29 +324,18 @@ drawFloor()
 void
 drawCeiling()
 {
-	int xi=0;
-	int xy=0;
-	if (lost||win)
-	{
-		xi=-50;
-		xy=-50;
-		length=500;
-		width=500;
-		glBindTexture (GL_TEXTURE_2D,textures[8]);
-	}
-	else
-		glBindTexture (GL_TEXTURE_2D,textures[0]);
+	glBindTexture (GL_TEXTURE_2D,textures[1]);
 	glPushMatrix ();
 	glBegin (GL_QUADS);
 	glNormal3fv (normalDown);
 	glTexCoord2f (0.0f,0.0f);
-	glVertex3f (xi,xy,h);
+	glVertex3f (0,0,h);
 	glTexCoord2f (0.0f,1.0f);
-	glVertex3f (xi,length,h);
+	glVertex3f (0,length,h);
 	glTexCoord2f (1.0f,1.0f);
 	glVertex3f (width,length,h);
 	glTexCoord2f (1.0f,0.0f);
-	glVertex3f (width,xy,h);
+	glVertex3f (width,0,h);
 	glEnd ();
 	glPopMatrix ();
 }
@@ -412,7 +412,7 @@ positionRotatingCube(int& i,int& j)
 	glRotatef (rotate,0,0,1.6);
 	if (win)
 	{
-		glBindTexture (GL_TEXTURE_2D,textures[6]);
+		glBindTexture (GL_TEXTURE_2D,textures[5]);
 		GLUquadric * q=gluNewQuadric ();
 		gluQuadricTexture (q,true);
 		gluSphere (q,sphereDim,200,200);
@@ -420,7 +420,7 @@ positionRotatingCube(int& i,int& j)
 	else
 	{
 		glTranslatef (-((c-1.2)/2),-((c-1.2)/2),0);
-		glBindTexture (GL_TEXTURE_2D,textures[1]);
+		glBindTexture (GL_TEXTURE_2D,textures[0]);
 		drawCube ();
 	}
 	glPopMatrix ();
@@ -430,6 +430,7 @@ rotateCube(int value)
 {
 	if (win)
 	{
+		glEnable (GL_FOG);
 		contatore++;
 		rimb-=0.20;
 		if (rimb<=-1)
@@ -442,7 +443,10 @@ rotateCube(int value)
 	if (contatore<500)
 		glutTimerFunc (25,rotateCube,0);
 	else
+	{
+		glDisable (GL_FOG);
 		gameOver (0);
+	}
 }
 void
 reset()
@@ -452,6 +456,8 @@ reset()
 	width=c*31;
 	aerial=lost=win=profVuoleVincere=false;
 	contatore=0;
+	decide=false;
+	millis=300000;
 	glutTimerFunc (25,rotateCube,0);
 	glutTimerFunc (300000,gameOver,0);
 	loadMap (generateXY (4));
@@ -467,6 +473,9 @@ keyboard(int key,int x,int y)
 		a=a+da;
 		vectorLookAt.direction[0]=vectorLookAt.eye[0]+cos ((a*3.14)/180);
 		vectorLookAt.direction[1]=vectorLookAt.eye[1]+sin ((a*3.14)/180);
+		spotDirection[0]=vectorLookAt.direction[0];
+		spotDirection[1]=vectorLookAt.direction[1];
+		spotDirection[2]=vectorLookAt.direction[2];
 	}
 	else if (key==GLUT_KEY_RIGHT)
 	{
@@ -474,6 +483,9 @@ keyboard(int key,int x,int y)
 		a=a-da;
 		vectorLookAt.direction[0]=vectorLookAt.eye[0]+cos ((a*3.14)/180);
 		vectorLookAt.direction[1]=vectorLookAt.eye[1]+sin ((a*3.14)/180);
+		spotDirection[0]=vectorLookAt.direction[0];
+		spotDirection[1]=vectorLookAt.direction[1];
+		spotDirection[2]=vectorLookAt.direction[2];
 	}
 	else if (key==GLUT_KEY_UP)
 	{
@@ -486,6 +498,9 @@ keyboard(int key,int x,int y)
 			vectorLookAt.direction[0]=vectorLookAt.eye[0]+cos ((a*3.14)/180);
 			vectorLookAt.direction[1]=vectorLookAt.eye[1]+sin ((a*3.14)/180);
 			cout<<"forward-"<<"current position"<<vectorLookAt.eye[0]<<","<<vectorLookAt.eye[1]<<endl;
+			spotDirection[0]=vectorLookAt.direction[0];
+			spotDirection[1]=vectorLookAt.direction[1];
+			spotDirection[2]=vectorLookAt.direction[2];
 		}
 	}
 	else if (key==GLUT_KEY_DOWN)
@@ -506,7 +521,11 @@ keyboard(int key,int x,int y)
 void
 keyPressed(unsigned char key,int x,int y)
 {
-	if (key=='f'||key=='F')
+	if (key=='n'||key=='N')
+		glEnable (GL_FOG);
+	else if (key=='b'||key=='B')
+		glDisable (GL_FOG);
+	else if (key=='f'||key=='F')
 		glutFullScreen ();
 	else if ((key=='z'||key=='Z')&&aerial)
 		zoom (true);
@@ -601,7 +620,10 @@ display(void)
 			vectorLookAt.up[2]);
 	glMaterialfv (GL_FRONT,GL_SPECULAR,spec);
 	glMaterialfv (GL_FRONT,GL_SHININESS,sheen);
-	drawFloor ();
+	if (!decide)
+		drawFloor (false);
+	else
+		drawFloor (decide);
 	if (!aerial)
 		drawCeiling ();
 	else if (!win&&!lost)
@@ -609,7 +631,7 @@ display(void)
 		glPushMatrix ();
 		glTranslatef (vectorLookAt.eye[0],vectorLookAt.eye[1],rimb);
 		glRotatef (rotate,0,0,1.6);
-		glBindTexture (GL_TEXTURE_2D,textures[5]);
+		glBindTexture (GL_TEXTURE_2D,textures[4]);
 		glTranslatef (-((c-1.2)/2),-((c-1.2)/2),0);
 		drawCube ();
 		glPopMatrix ();
@@ -622,9 +644,9 @@ display(void)
 			{
 				glPushMatrix ();
 				if (aerial)
-					glBindTexture (GL_TEXTURE_2D,textures[3]);
+					glBindTexture (GL_TEXTURE_2D,textures[1]);
 				else
-					glBindTexture (GL_TEXTURE_2D,textures[4]);
+					glBindTexture (GL_TEXTURE_2D,textures[3]);
 				drawWall (j,i);
 				glPopMatrix ();
 			}
@@ -632,9 +654,9 @@ display(void)
 			{
 				glPushMatrix ();
 				if (!lost)
-					glBindTexture (GL_TEXTURE_2D,textures[3]);
+					glBindTexture (GL_TEXTURE_2D,textures[2]);
 				else
-					glBindTexture (GL_TEXTURE_2D,textures[7]);
+					glBindTexture (GL_TEXTURE_2D,textures[6]);
 				drawWall (j,i);
 				glPopMatrix ();
 			}
@@ -667,7 +689,7 @@ main(int argc,char **argv)
 	glutDisplayFunc (display);
 	glutPostRedisplay ();
 	glutTimerFunc (25,rotateCube,0);
-	glutTimerFunc (300000,gameOver,0);  //gioco dura 5 minuti
+	glutTimerFunc (millis,gameOver,0);  //gioco dura 5 minuti
 	loadTextures ();
 	glutMainLoop ();
 	glDeleteTextures (numTextures,textures);
