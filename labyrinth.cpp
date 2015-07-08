@@ -21,7 +21,7 @@ const float h=c/2;  //meta diametro del cubo
 float length=c*38;  //lunghezza matrice
 float width=c*31;  //larghezza matrice
 float a=0.0;  //angolo
-float da=1;
+float da=2;
 float l=0.7;
 float rimb=1.1;
 bool aerial=false;  //segnala se la visuale e dall'alto
@@ -195,13 +195,13 @@ void
 verify(int& x,int& y,int& posX,int& posY)
 {
 	if (map[x+1][y]==0)
-		posX+=c;
-	else if (map[x][y+1]==0)
 		posY+=c;
+	else if (map[x][y+1]==0)
+		posX+=c;
 	else if (map[x-1][y]==0)
-		posX-=c;
-	else if (map[x][y-1]==0)
 		posY-=c;
+	else if (map[x][y-1]==0)
+		posX-=c;
 }
 void
 initializateVision()
